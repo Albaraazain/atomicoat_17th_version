@@ -1,8 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="atomicoat_17th_version"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:enableOnBackInvokedCallback="true">
+        <meta-data
+            android:name="com.google.android.recaptcha.public_key"
+            android:value="6LfXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" />
+        <meta-data
+            android:name="com.google.firebase.auth.api.key"
+            android:value="AIzaSyBKZcCZbUtNcXpQvP6VNsAVLeJiLWDc4kQ" />
+        <meta-data
+            android:name="com.google.android.gms.auth.WEB_CLIENT_ID"
+            android:value="718715320122-qqvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.apps.googleusercontent.com" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

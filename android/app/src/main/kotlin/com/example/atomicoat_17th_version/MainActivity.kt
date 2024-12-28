@@ -1,4 +1,4 @@
-package com.example.atomicoat_17th_version
+package com.albaraa.atomicoat
 
 import io.flutter.embedding.android.FlutterActivity
 

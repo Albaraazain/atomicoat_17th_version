@@ -1,4 +1,6 @@
 // lib/features/auth/data/models/user_model.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 enum UserRole {
   user,
   operator,
@@ -42,17 +44,28 @@ class UserModel {
     'createdAt': createdAt.toIso8601String(),
   };
 
-  factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-    id: json['id'],
-    email: json['email'],
-    name: json['name'],
-    role: UserRole.values.firstWhere(
-      (e) => e.toString().split('.').last == json['role'],
-    ),
-    status: UserStatus.values.firstWhere(
-      (e) => e.toString().split('.').last == json['status'],
-    ),
-    machineId: json['machineId'],
-    createdAt: DateTime.parse(json['createdAt']),
-  );
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    try {
+      return UserModel(
+        id: json['id'] as String,
+        email: json['email'] as String,
+        name: json['name'] as String,
+        role: UserRole.values.firstWhere(
+          (e) => e.toString().split('.').last == (json['role'] as String? ?? 'user'),
+          orElse: () => UserRole.user,
+        ),
+        status: UserStatus.values.firstWhere(
+          (e) => e.toString().split('.').last == (json['status'] as String? ?? 'pending'),
+          orElse: () => UserStatus.pending,
+        ),
+        machineId: json['machineId'] as String,
+        createdAt: json['createdAt'] is String
+          ? DateTime.parse(json['createdAt'] as String)
+          : (json['createdAt'] as Timestamp).toDate(),
+      );
+    } catch (e) {
+      print('Error parsing UserModel: $e');
+      rethrow;
+    }
+  }
 }
