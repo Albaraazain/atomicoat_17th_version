@@ -1,43 +1,49 @@
-// lib/features/machine/widgets/create_machine_dialog.dart
+// lib/features/machine/widgets/edit_machine_dialog.dart
+import 'package:atomicoat_17th_version/features/machine/data/models/machine_model.dart';
 import 'package:atomicoat_17th_version/features/machine/providers/machine_provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class CreateMachineDialog extends StatefulWidget {
+class EditMachineDialog extends StatefulWidget {
+  final MachineModel machine;
+
+  const EditMachineDialog({required this.machine});
+
   @override
-  _CreateMachineDialogState createState() => _CreateMachineDialogState();
+  _EditMachineDialogState createState() => _EditMachineDialogState();
 }
 
-class _CreateMachineDialogState extends State<CreateMachineDialog> {
+class _EditMachineDialogState extends State<EditMachineDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _serialController = TextEditingController();
-  final _locationController = TextEditingController();
-  String? _selectedAdminId;
+  late TextEditingController _locationController;
+  late String _status;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _locationController = TextEditingController(text: widget.machine.location);
+    _status = widget.machine.status;
+  }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Create New Machine'),
+      title: Text('Edit Machine'),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Serial number display (non-editable)
               TextFormField(
-                controller: _serialController,
+                initialValue: widget.machine.serialNumber,
+                enabled: false,
                 decoration: InputDecoration(
                   labelText: 'Serial Number',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter serial number';
-                  }
-                  return null;
-                },
               ),
               SizedBox(height: 16),
               TextFormField(
@@ -54,7 +60,26 @@ class _CreateMachineDialogState extends State<CreateMachineDialog> {
                 },
               ),
               SizedBox(height: 16),
-              _buildAdminSelector(),
+              DropdownButtonFormField<String>(
+                value: _status,
+                decoration: InputDecoration(
+                  labelText: 'Status',
+                  border: OutlineInputBorder(),
+                ),
+                items: ['active', 'maintenance', 'inactive']
+                    .map((status) => DropdownMenuItem(
+                          value: status,
+                          child: Text(status.toUpperCase()),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _status = value;
+                    });
+                  }
+                },
+              ),
             ],
           ),
         ),
@@ -72,52 +97,9 @@ class _CreateMachineDialogState extends State<CreateMachineDialog> {
                   width: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text('Create'),
+              : Text('Save Changes'),
         ),
       ],
-    );
-  }
-
-  Widget _buildAdminSelector() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .where('role', isEqualTo: 'admin')
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return CircularProgressIndicator();
-        }
-
-        List<DropdownMenuItem<String>> adminItems = [];
-        for (var doc in snapshot.data!.docs) {
-          final userData = doc.data() as Map<String, dynamic>;
-          adminItems.add(DropdownMenuItem(
-            value: doc.id,
-            child: Text(userData['name'] ?? 'Unknown'),
-          ));
-        }
-
-        return DropdownButtonFormField<String>(
-          value: _selectedAdminId,
-          decoration: InputDecoration(
-            labelText: 'Assign Admin',
-            border: OutlineInputBorder(),
-          ),
-          items: adminItems,
-          onChanged: (value) {
-            setState(() {
-              _selectedAdminId = value;
-            });
-          },
-          validator: (value) {
-            if (value == null) {
-              return 'Please select an admin';
-            }
-            return null;
-          },
-        );
-      },
     );
   }
 
@@ -125,12 +107,12 @@ class _CreateMachineDialogState extends State<CreateMachineDialog> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        await context.read<MachineProvider>().createMachine(
-          serialNumber: _serialController.text,
+        final updatedMachine = widget.machine.copyWith(
           location: _locationController.text,
-          status: 'inactive',
-          authorizedUsers: [],
+          status: _status,
         );
+
+        await context.read<MachineProvider>().updateMachine(updatedMachine);
         Navigator.pop(context);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -144,7 +126,6 @@ class _CreateMachineDialogState extends State<CreateMachineDialog> {
 
   @override
   void dispose() {
-    _serialController.dispose();
     _locationController.dispose();
     super.dispose();
   }

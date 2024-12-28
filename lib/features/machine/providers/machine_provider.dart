@@ -4,82 +4,71 @@ import 'dart:async';
 import 'package:atomicoat_17th_version/features/auth/providers/auth_provider.dart';
 import 'package:atomicoat_17th_version/features/machine/data/models/machine_model.dart';
 import 'package:atomicoat_17th_version/features/machine/data/repositories/machine_repository.dart';
-import 'package:atomicoat_17th_version/features/machine/providers/machine_state.dart';
 import 'package:flutter/foundation.dart';
 
-class MachineProvider with ChangeNotifier {
-  final MachineRepository _machineRepository;
+class MachineProvider extends ChangeNotifier {
+  final MachineRepository _repository;
   final AuthProvider _authProvider;
-  MachineState _state = MachineState();
-  StreamSubscription? _machineSubscription;
+  List<MachineModel> _machines = [];
 
-  MachineProvider(this._machineRepository, this._authProvider) {
-    _initializeMachineStream();
+  MachineProvider(this._repository, this._authProvider) {
+    // Initialize machines when auth state changes
+    _authProvider.addListener(_loadMachinesOnAuthChange);
   }
 
-  MachineState get state => _state;
-  List<MachineModel> get machines => _state.machines;
-  MachineModel? get selectedMachine => _state.selectedMachine;
+  List<MachineModel> get machines => _machines;
 
-  void _updateState({
-    bool? isLoading,
-    List<MachineModel>? machines,
-    MachineModel? selectedMachine,
-    String? error,
-  }) {
-    _state = _state.copyWith(
-      isLoading: isLoading,
-      machines: machines,
-      selectedMachine: selectedMachine,
-      error: error,
-    );
+  void _loadMachinesOnAuthChange() {
+    if (_authProvider.currentUser != null) {
+      loadMachines();
+    } else {
+      _machines = [];
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadMachines() async {
+    _machines = await _repository.getMachines();
     notifyListeners();
   }
 
-  void _initializeMachineStream() {
-    _machineSubscription?.cancel();
-    if (_authProvider.currentUser != null) {
-      _machineSubscription = _machineRepository
-          .getMachinesStream(
-            _authProvider.currentUser!.id,
-            _authProvider.currentUser!.role,
-          )
-          .listen(
-            (machines) => _updateState(machines: machines),
-            onError: (error) => _updateState(error: error.toString()),
-          );
-    }
+  Future<void> createMachine({
+    required String serialNumber,
+    required String location,
+    required String status,
+    required List<String> authorizedUsers,
+  }) async {
+    final machine = MachineModel(
+      id: '',
+      serialNumber: serialNumber,
+      location: location,
+      status: status,
+      authorizedUsers: authorizedUsers,
+    );
+    await _repository.createMachine(machine);
+    await loadMachines();
   }
 
-  Future<void> createMachine(MachineModel machine) async {
-    try {
-      _updateState(isLoading: true, error: null);
-      await _machineRepository.createMachine(machine);
-      _updateState(isLoading: false);
-    } catch (e) {
-      _updateState(isLoading: false, error: e.toString());
-      rethrow;
-    }
+  Future<void> updateMachine(MachineModel machine) async {
+    await _repository.updateMachine(machine);
+    await loadMachines();
   }
 
-  Future<void> updateMachineStatus(String machineId, String status) async {
-    try {
-      _updateState(isLoading: true, error: null);
-      await _machineRepository.updateMachineStatus(machineId, status);
-      _updateState(isLoading: false);
-    } catch (e) {
-      _updateState(isLoading: false, error: e.toString());
-      rethrow;
-    }
+  Future<void> deleteMachine(String machineId) async {
+    await _repository.deleteMachine(machineId);
+    await loadMachines();
   }
 
-  void selectMachine(MachineModel machine) {
-    _updateState(selectedMachine: machine);
+  Future<void> updateMachineStatus(String machineId, String newStatus) async {
+    final machine = _machines.firstWhere((m) => m.id == machineId);
+    final updatedMachine = machine.copyWith(status: newStatus);
+    await _repository.updateMachine(updatedMachine);
+    await loadMachines();
   }
 
   @override
   void dispose() {
-    _machineSubscription?.cancel();
+    _authProvider.removeListener(_loadMachinesOnAuthChange);
     super.dispose();
   }
 }

@@ -1,6 +1,7 @@
 // lib/features/auth/screens/registration_screen.dart
 import 'package:atomicoat_17th_version/features/auth/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class RegistrationScreen extends StatefulWidget {
   @override

@@ -1,55 +1,64 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class MachineModel {
   final String id;
   final String serialNumber;
   final String location;
-  final String labName;
-  final String labInstitution;
-  final String adminId;
-  final List<String> authorizedUsers;
   final String status;
-  final DateTime createdAt;
   final DateTime? lastMaintenance;
+  final List<String> authorizedUsers;
+  final String? adminId;
 
   MachineModel({
     required this.id,
     required this.serialNumber,
     required this.location,
-    required this.labName,
-    required this.labInstitution,
-    required this.adminId,
-    this.authorizedUsers = const [],
     required this.status,
-    required this.createdAt,
     this.lastMaintenance,
+    required this.authorizedUsers,
+    this.adminId,
   });
 
-  factory MachineModel.fromJson(Map<String, dynamic> json) {
+  factory MachineModel.fromMap(Map<String, dynamic> map, String id) {
     return MachineModel(
-      id: json['id'] as String,
-      serialNumber: json['serialNumber'] as String,
-      location: json['location'] as String,
-      labName: json['labName'] as String,
-      labInstitution: json['labInstitution'] as String,
-      adminId: json['adminId'] as String,
-      authorizedUsers: List<String>.from(json['authorizedUsers'] ?? []),
-      status: json['status'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      lastMaintenance: json['lastMaintenance'] != null
-          ? DateTime.parse(json['lastMaintenance'] as String)
-          : null,
+      id: id,
+      serialNumber: map['serialNumber'] ?? '',
+      location: map['location'] ?? '',
+      status: map['status'] ?? 'inactive',
+      lastMaintenance: (map['lastMaintenance'] as Timestamp?)?.toDate(),
+      authorizedUsers: List<String>.from(map['authorizedUsers'] ?? []),
+      adminId: map['adminId'],
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'serialNumber': serialNumber,
-    'location': location,
-    'labName': labName,
-    'labInstitution': labInstitution,
-    'adminId': adminId,
-    'authorizedUsers': authorizedUsers,
-    'status': status,
-    'createdAt': createdAt.toIso8601String(),
-    'lastMaintenance': lastMaintenance?.toIso8601String(),
-  };
+  Map<String, dynamic> toMap() {
+    return {
+      'serialNumber': serialNumber,
+      'location': location,
+      'status': status,
+      'lastMaintenance': lastMaintenance != null ? Timestamp.fromDate(lastMaintenance!) : null,
+      'authorizedUsers': authorizedUsers,
+      'adminId': adminId,
+    };
+  }
+
+  MachineModel copyWith({
+    String? id,
+    String? serialNumber,
+    String? location,
+    String? status,
+    DateTime? lastMaintenance,
+    List<String>? authorizedUsers,
+    String? adminId,
+  }) {
+    return MachineModel(
+      id: id ?? this.id,
+      serialNumber: serialNumber ?? this.serialNumber,
+      location: location ?? this.location,
+      status: status ?? this.status,
+      lastMaintenance: lastMaintenance ?? this.lastMaintenance,
+      authorizedUsers: authorizedUsers ?? this.authorizedUsers,
+      adminId: adminId ?? this.adminId,
+    );
+  }
 }

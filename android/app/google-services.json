@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "718715320122",
+    "project_id": "atomicoat-new",
+    "storage_bucket": "atomicoat-new.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:718715320122:android:45c7ea19fe9fabc895c203",
+        "android_client_info": {
+          "package_name": "com.albaraa.atomicoat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKZcCZbUtNcXpQvP6VNsAVLeJiLWDc4kQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

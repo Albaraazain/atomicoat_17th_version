@@ -3,6 +3,8 @@ import 'package:atomicoat_17th_version/features/auth/data/models/user_model.dart
 import 'package:atomicoat_17th_version/features/auth/providers/auth_provider.dart';
 import 'package:atomicoat_17th_version/features/machine/data/models/machine_model.dart';
 import 'package:atomicoat_17th_version/features/machine/providers/machine_provider.dart';
+import 'package:atomicoat_17th_version/features/machine/widgets/create_machine_dialog.dart';
+import 'package:atomicoat_17th_version/features/machine/widgets/machine_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

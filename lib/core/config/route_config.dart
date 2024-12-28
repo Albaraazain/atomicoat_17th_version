@@ -1,17 +1,16 @@
 // lib/core/config/route_config.dart
-import 'package:atomicoat_17th_version/features/auth/data/models/user_model.dart';
-import 'package:atomicoat_17th_version/features/auth/providers/auth_provider.dart';
+import 'package:atomicoat_17th_version/core/screens/auth_wrapper.dart';
 import 'package:atomicoat_17th_version/features/auth/screens/login_screen.dart';
+import 'package:atomicoat_17th_version/features/auth/screens/profile_screen.dart';
 import 'package:atomicoat_17th_version/features/auth/screens/registration_screen.dart';
 import 'package:atomicoat_17th_version/features/machine/data/models/machine_model.dart';
 import 'package:atomicoat_17th_version/features/machine/screens/machine_details_screen.dart';
 import 'package:atomicoat_17th_version/features/machine/screens/machine_list_screen.dart';
 import 'package:atomicoat_17th_version/features/machine/screens/machine_users_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class RouteConfig {
-  static Route<dynamic> generateRoute(RouteSettings settings) {
+  static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/':
         return MaterialPageRoute(
@@ -45,6 +44,11 @@ class RouteConfig {
           builder: (_) => MachineUsersScreen(machine: machine),
         );
 
+      case '/profile':
+        return MaterialPageRoute(
+          builder: (_) => ProfileScreen(),
+        );
+
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
@@ -57,33 +61,4 @@ class RouteConfig {
   }
 }
 
-// lib/core/screens/auth_wrapper.dart
-class AuthWrapper extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, _) {
-        if (authProvider.state.isLoading) {
-          return LoadingScreen();
-        }
 
-        if (!authProvider.isAuthenticated) {
-          return LoginScreen();
-        }
-
-        final user = authProvider.currentUser!;
-        switch (user.status) {
-          case UserStatus.pending:
-            return PendingApprovalScreen();
-          case UserStatus.active:
-            return HomeScreen();
-          case UserStatus.inactive:
-          case UserStatus.denied:
-            return AccessDeniedScreen();
-          default:
-            return LoginScreen();
-        }
-      },
-    );
-  }
-}

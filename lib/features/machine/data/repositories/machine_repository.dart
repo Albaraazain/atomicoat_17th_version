@@ -1,51 +1,32 @@
 // lib/features/machine/data/repositories/machine_repository.dart
-import 'package:atomicoat_17th_version/features/auth/data/models/user_model.dart';
 import 'package:atomicoat_17th_version/features/machine/data/models/machine_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MachineRepository {
   final FirebaseFirestore _firestore;
+  final String _collection = 'machines';
 
-  MachineRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  MachineRepository(this._firestore);
 
-  // Creates new machine and assigns admin
+  Future<List<MachineModel>> getMachines() async {
+    final snapshot = await _firestore.collection(_collection).get();
+    return snapshot.docs
+        .map((doc) => MachineModel.fromMap(doc.data(), doc.id))
+        .toList();
+  }
+
   Future<void> createMachine(MachineModel machine) async {
-    final batch = _firestore.batch();
-
-    // Create machine document
-    final machineRef = _firestore.collection('machines').doc();
-    batch.set(machineRef, machine.toJson());
-
-    // Update admin's user document with machineId
-    final adminRef = _firestore.collection('users').doc(machine.adminId);
-    batch.update(adminRef, {
-      'machineId': machineRef.id,
-      'role': 'admin'
-    });
-
-    await batch.commit();
+    await _firestore.collection(_collection).add(machine.toMap());
   }
 
-  Future<void> addUserToMachine(String machineId, String userId) async {
-    await _firestore.collection('machines').doc(machineId).update({
-      'authorizedUsers': FieldValue.arrayUnion([userId])
-    });
+  Future<void> updateMachine(MachineModel machine) async {
+    await _firestore
+        .collection(_collection)
+        .doc(machine.id)
+        .update(machine.toMap());
   }
 
-  // Get machines based on user role
-  Stream<List<MachineModel>> getMachinesStream(String userId, UserRole role) {
-    if (role == UserRole.superAdmin) {
-      return _firestore.collection('machines').snapshots().map((snapshot) =>
-          snapshot.docs.map((doc) => MachineModel.fromJson(doc.data())).toList());
-    } else {
-      return _firestore
-          .collection('machines')
-          .where('authorizedUsers', arrayContains: userId)
-          .snapshots()
-          .map((snapshot) => snapshot.docs
-              .map((doc) => MachineModel.fromJson(doc.data()))
-              .toList());
-    }
+  Future<void> deleteMachine(String machineId) async {
+    await _firestore.collection(_collection).doc(machineId).delete();
   }
 }

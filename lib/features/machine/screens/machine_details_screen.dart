@@ -5,6 +5,7 @@ import 'package:atomicoat_17th_version/features/machine/data/models/machine_mode
 import 'package:atomicoat_17th_version/features/machine/providers/machine_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class MachineDetailsScreen extends StatelessWidget {
@@ -61,10 +62,10 @@ class MachineDetailsScreen extends StatelessWidget {
             Divider(),
             _buildInfoRow('Serial Number:', machine.serialNumber),
             _buildInfoRow('Location:', machine.location),
-            _buildInfoRow('Lab Name:', machine.labName),
-            _buildInfoRow('Institution:', machine.labInstitution),
-            _buildInfoRow('Created At:',
-              DateFormat('dd MMM yyyy').format(machine.createdAt)),
+            _buildInfoRow('Status:', machine.status),
+            if (machine.adminId != null)
+              _buildInfoRow('Admin ID:', machine.adminId!),
+            _buildInfoRow('Authorized Users:', machine.authorizedUsers.length.toString()),
           ],
         ),
       ),
